@@ -11,10 +11,6 @@
 [place_final]: docs/place_final.png "The placement of a tetramino"
 
 [results_issue]: docs/results_issue.png "Binarization error"
-[results_01_09]: docs/results_01_09.png "Results of Schematic #01 and Scene #09"
-[results_02_02]: docs/results_02_02.png "Results of Schematic #02 and Scene #02"
-[results_03_07]: docs/results_03_07.png "Results of Schematic #03 and Scene #07"
-[results_04_06]: docs/results_04_06.png "Results of Schematic #04 and Scene #06"
 
 
 # Tetramini
@@ -22,10 +18,12 @@
 <div align="center">
   <img height="200" src="docs/tetris_puzzle_min.png" alt="Tetris Puzzle">
 </div>
+<br>
 
-An image processing program for solving Tetris Puzzles.  
+Solve Tetris Puzzles using image processing.  
 
 In a Tetris Puzzle, there are several figures (we call them *Tetramini*, plural for *Tetramino*) that, combined together, must compose a pattern without holes.  
+
 
 ## Functionality
 
@@ -38,21 +36,57 @@ The **schematic image (1)** represents a pattern where to place the tetramini, w
   <img height="500" src="docs/tetris_rules.png" alt="Functionality">
 </div>
 
-## Assumptions
 
-The program does not process images in the wild. For proper execution, it should be assumed that the input images are shot in the same manner as the examples shown previously:
-- Images must be shot from above, perpendicular to the support plane, with uniform lighting and without noise
-- The background texture, shooting distance, and color balance of scene images must be the same as that of training images
-- Tetramini in the scene must have a color that is homogeneous and featured in the tetramini of the training image
-- The schematic pattern must be at the center of the schematic image
-- There must be no extraneous objects in the images
-- Input images must be the same size as the training images
+## Outcomes
+
+<br>
+
+<div align="center">
+  <img width="600" src="docs/results_01_09.png" alt="Outcome of Schematic #01 and Scene #09" title="Outcome of Schematic #01 and Scene #09">
+  <br>
+  Schematic #01 - Scene #09
+</div>
+<br>
+<br>
+
+<div align="center">
+  <img width="600" src="docs/results_02_02.png" alt="Outcome of Schematic #02 and Scene #02" title="Outcome of Schematic #02 and Scene #02">
+  <br>
+  Schematic #02 - Scene #02
+</div>
+<br>
+<br>
+
+<div align="center">
+  <img width="600" src="docs/results_03_07.png" alt="Outcome of Schematic #03 and Scene #07" title="Outcome of Schematic #03 and Scene #07">
+  <br>
+  Schematic #03 - Scene #07
+</div>
+<br>
+<br>
+
+<div align="center">
+  <img width="600" src="docs/results_04_06.png" alt="Outcome of Schematic #04 and Scene #06" title="Outcome of Schematic #04 and Scene #06">
+  <br>
+  Schematic #04 - Scene #06
+</div>
+<br>
 
 
-Important things to note:
-- Tetramini in the scene can be translated and rotated to be placed in the schematic, but cannot be mirrored
-- Only the images in the `Training` folder can be used for eventual training of classifiers
-- The scene image may contain a different number of tetramini than the schematic image
+## Performance
+
+The algorithm provided an accuracy of **91.66%**.  
+All the errors arise from Scene image #05 due to a binarization error of the black tetramino. In fact, it features a tricky lighting that distances its color too much from the training samples.  
+
+![Binarization error][results_issue]
+
+Accuracy is measured in a supervised manner thanks to a script that displays the combinations between each scene image and all the schematic image and allows errors to be reported by clicking the faulty combinations.
+
+<div align="center">
+  <img src="docs/results_error_matrix.png" alt="Error matrix" height="350"/>
+</div>
+
+The program produces the output with an average execution time of **8 seconds**, measured on a i7-4770k processor.  
 
 
 ## Project
@@ -101,8 +135,24 @@ project
 ```
 
 
+## Assumptions
 
-## Algorithm
+The program does not process images in the wild. For proper execution, it should be assumed that the input images are shot in the same manner as the examples shown previously:
+- Images must be shot from above, perpendicular to the support plane, with uniform lighting and without noise
+- The background texture, shooting distance, and color balance of scene images must be the same as that of training images
+- Tetramini in the scene must have a color that is homogeneous and featured in the tetramini of the training image
+- The schematic pattern must be at the center of the schematic image
+- There must be no extraneous objects in the images
+- Input images must be the same size as the training images
+
+
+Project requirements:
+- Tetramini in the scene can be translated and rotated to be placed in the schematic, but cannot be mirrored
+- Only the images in the `Training` folder can be used for eventual training of classifiers
+- The scene image may contain a different number of tetramini than the schematic image
+
+
+## Algorithm Overview
 
 The algorithm can be divided into four sections:
 1. Classifier training
@@ -110,7 +160,8 @@ The algorithm can be divided into four sections:
 1. Scene labeling
 1. Tetramini placing
 
-#### Classifier training
+
+## Classifier training
 
 The program solves a binary classification problem: tetramino vs background. An image for each class has been created by manually segmenting regions from the training images.  
 
@@ -123,7 +174,7 @@ Tetramini class training
 A KNN classifier with 3 neighbors is trained and will later be used to label the scene image.
 
 
-#### Schematic labeling
+## Schematic labeling
 
 The image is read as a gray image and binarized using [an implementation of Sauvola's local image thresholding][sauvola].  
 A median filter is then applied and the image is finally labeled using a connected-component labeling algorithm.  
@@ -132,7 +183,7 @@ The resulting image will have a different label for each distinct region.
 ![Schematic labeling process][labeling_schematic]
 
 
-#### Scene labeling
+## Scene labeling
 
 A mean filter is applied to the scene image to smooth the tetramini and background colors.  
 
@@ -145,7 +196,7 @@ The resulting image will have a different label for each distinct region.
 ![Scene labeling process][labeling_scene]
 
 
-#### Tetramini placing
+## Tetramini placing
 
 Each tetramino in the labeled schematic image is considered individually and the correlation between it and every tetramino in the labeled scene image is computed as explained in the following.  
 
@@ -165,45 +216,13 @@ For each pair, these information are used to place the scene tetramino into the 
 ![The placement of a tetramino][place_final]
 
 
-
-## Results
-
-The algorithm provided an accuracy of **91.66%**.  
-All the errors arise from Scene image #05 due to a binarization error of the black tetramino. In fact, it features a tricky lighting that distances its color too much from the training samples.  
-
-![Binarization error][results_issue]
-
-Accuracy is measured in a supervised manner thanks to a script that displays the combinations between each scene image and all the schematic image and allows errors to be reported by clicking the faulty combinations.
-
-<div align="center">
-  <img src="docs/results_error_matrix.png" alt="Error matrix" height="350"/>
-</div>
-
-The program produces the output with an average execution time of **8 seconds**, measured on a i7-4770k processor.  
-
-
-#### Results examples
-
-Schematic #01 - Scene #09  
-![Results of Schematic #01 and Scene #09][results_01_09]
-
-Schematic #02 - Scene #02  
-![Results of Schematic #02 and Scene #02][results_02_02]
-
-Schematic #03 - Scene #07  
-![Results of Schematic #03 and Scene #07][results_03_07]
-
-Schematic #04 - Scene #06  
-![Results of Schematic #04 and Scene #06][results_04_06]
-
-
-#### Limitations and future work
+## Limitations and future work
 - Angle of placement could be further improved because sometimes it is wrong by a few degrees
 - Performance could be improved primarily by using a different method (e.g. thresholding) to label the scene image, and by reducing the number of correlation coefficient calculations
-- Work could be done to remove some assumptions
+- Remove some assumptions
 
 
-#### Discarded methods
+## Discarded methods
 
 Other methods have been tested and later discarded during the development of the project:
 - **Otsu** thresholding for Schematic binarization: not working since the histograms of the images do not have clear peaks
